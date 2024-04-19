@@ -1,5 +1,6 @@
+PY_PATH := $(shell (python -c "import sys; print (':'.join(sys.path))" ))
 PY_LDFLAGS := $(shell (python3-config --ldflags --embed))
-PY_CFLAGS := $(shell (python3-config --cflags))
+PY_CFLAGS := $(shell (python3-config --cflags)) -DDEFAULT_PY_PATH=\"$(PY_PATH)\"
 
 CC ?= gcc
 

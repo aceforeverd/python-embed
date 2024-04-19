@@ -9,7 +9,9 @@
 #include <unistd.h>
 #include <wchar.h>
 
-static const char DEFAULT_PY_PATH[] = "/usr/local/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python312.zip:/usr/local/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12:/usr/local/Cellar/python@3.12/3.12.3/Frameworks/Python.framework/Versions/3.12/lib/python3.12/lib-dynload:/usr/local/lib/python3.12/site-packages";
+#ifndef DEFAULT_PY_PATH
+static_assert(false, "default python path not detected");
+#endif
 
 int main(int argc, char *argv[]) {
   setlocale(LC_ALL, "en_US.utf8");
