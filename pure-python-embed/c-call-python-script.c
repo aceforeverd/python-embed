@@ -2,57 +2,34 @@
 
 #include <Python.h>
 #include <libgen.h>
-#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <wchar.h>
-
-#ifndef DEFAULT_PY_PATH
-static_assert(false, "default python path not detected");
-#endif
 
 int main(int argc, char *argv[]) {
-  setlocale(LC_ALL, "en_US.utf8");
-
-  PyObject *pName, *pModule, *pFunc;
-  PyObject *pArgs, *pValue;
-  int i;
-
   if (argc < 3) {
     fprintf(stderr, "Usage: call pythonfile funcname [args]\n");
     return 1;
   }
-
-  wchar_t *program = Py_DecodeLocale(argv[0], NULL);
-  if (program == NULL) {
-    fprintf(stderr, "Fatal error: cannot decode argv[0]\n");
-    exit(1);
-  }
-  Py_SetProgramName(program);
 
   char exe_path[1024];
   if (realpath(argv[0], exe_path) == NULL) {
     perror("realpath");
     return 1;
   }
-
   // Extract the directory component from the executable path
   char *dir = dirname(exe_path);
-  char py_path_including_cwd[2048] = "";
-  strcat(py_path_including_cwd, DEFAULT_PY_PATH);
-  strcat(py_path_including_cwd, ":");
-  strcat(py_path_including_cwd, dir);
 
-  wchar_t w_py_path[strlen(py_path_including_cwd) + 1];
-  mbstowcs(w_py_path, py_path_including_cwd, strlen(py_path_including_cwd));
-  w_py_path[strlen(py_path_including_cwd)] = L'\0';
-  fwprintf(stdout, L"setting py path to: %ls\n", w_py_path);
-
-  // ensure it can find python module defined in current directory
-  Py_SetPath(w_py_path);
   Py_Initialize();
+
+  PyObject *sysPath = PySys_GetObject("path");
+  if (PyList_Append(sysPath, PyUnicode_DecodeFSDefault(dir))) {
+    perror("append python sys path");
+    return 1;
+  }
+  PySys_SetObject("path", sysPath);
+
+  PyObject *pName, *pModule, *pFunc;
+  PyObject *pArgs, *pValue;
   pName = PyUnicode_DecodeFSDefault(argv[1]);
   /* Error checking of pName left out */
 
@@ -65,7 +42,7 @@ int main(int argc, char *argv[]) {
 
     if (pFunc && PyCallable_Check(pFunc)) {
       pArgs = PyTuple_New(argc - 3);
-      for (i = 0; i < argc - 3; ++i) {
+      for (int i = 0; i < argc - 3; ++i) {
         pValue = PyLong_FromLong(atoi(argv[i + 3]));
         if (!pValue) {
           Py_DECREF(pArgs);
