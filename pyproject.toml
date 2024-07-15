@@ -12,7 +12,7 @@ numpy = "^1.26.4"
 
 
 [tool.poetry.group.dev.dependencies]
-setuptools = "^69.5.1"
+setuptools = "^70.0.0"
 
 [build-system]
 requires = ["poetry-core"]
